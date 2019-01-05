@@ -25,7 +25,7 @@
 
 比如，一次搜索过程如下：
 
-![Alt text](https://github.com/Yirui-Wang/JobShopper/blob/master/myplot.png)
+<center>![Alt text](https://github.com/Yirui-Wang/JobShopper/blob/master/myplot.png)</center>
 
 ## 数据格式
 
