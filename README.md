@@ -24,6 +24,7 @@
 第一句代码得到一个JobShopper对象（需要传入机器数量的参数），第二句代码利用遗传算法寻优，ga方法各个参数的含义在注释中有做详细解释。ga方法返回最后一代的种群和整个搜索过程的日志（会打印到命令行并且作图）。需要修改交叉算法的话，可以对__crossover方法的代码进行修改。
 
 比如，一次搜索过程如下：
+
 ![Alt text](https://github.com/Yirui-Wang/JobShopper/blob/master/myplot.png)
 
 ## 数据格式
