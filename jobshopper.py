@@ -150,5 +150,5 @@ class JobShopper:
 
 
 if __name__ == '__main__':
-    js = JobShopper(20)
+    js = JobShopper(n_machines=20)
     pop, logbook = js.ga(npop=100, cxpb=0.2, mutpb=0.8, ngen=10, tournsize=50, mu_indpb=0.05)
