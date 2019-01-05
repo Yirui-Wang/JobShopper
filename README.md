@@ -26,7 +26,7 @@
 比如，一次搜索过程如下：
 
 <div align=center>
-![Alt text](https://github.com/Yirui-Wang/JobShopper/blob/master/myplot.png)
+<img src="https://github.com/Yirui-Wang/JobShopper/blob/master/myplot.png"/>
 </div>
 
 ## 数据格式
