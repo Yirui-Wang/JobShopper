@@ -148,6 +148,42 @@ class JobShopper:
 
         plt.show()
 
+    def save_time_matrix(self, seq):
+        """
+        该函数的输出数据可直接用于绘制甘特图。
+        :param seq: 输入一个加工序列，按照文档中第一种方式编码，即取模后。
+        :return: 输出根据此加工序列加工时，每个工件所有工序的开始加工时间和结束加工时间并保存在data中。
+        """
+        ops = [-1] * self.__n_jobs
+        status = [0] * self.__n_machines
+
+        # start_time[i][j]代表第i个工件，第j个工序的开始加工时间，end_time[i][j]同理
+        start_time = [[-1] * self.__n_ops for _ in range(self.__n_jobs)]
+        end_time = [[-1] * self.__n_ops for _ in range(self.__n_jobs)]
+
+        for i in seq:  # 第i个工件
+            ops[i] += 1
+            j = ops[i]  # 第j道工序
+            machine = self.__machine_matrix[i][j]
+            time = self.__time_matrix[i][j]
+
+            if machine == -1 and time == 0:
+                continue
+
+            if j == 0:  # 如果是第0道工序，则开始时间为该工序将要使用机器的最近空闲时间点
+                start_time[i][j] = status[machine]
+
+            else:  # 如果不是第0道工序，则开始时间为第i个工件第(j-1)道工序的结束时间和该工序将要使用机器的最近空闲时间点之中的较大者
+                start_time[i][j] = end_time[i][j - 1] if end_time[i][j - 1] > status[machine] else status[machine]
+
+            end_time[i][j] = start_time[i][j] + time
+            status[machine] = end_time[i][j]
+
+        np.savetxt('data/start_time.csv', start_time, fmt='%d', delimiter=',')
+        np.savetxt('data/end_time.csv', end_time, fmt='%d', delimiter=',')
+
+        return start_time, end_time
+
 
 if __name__ == '__main__':
     js = JobShopper(n_machines=20)
