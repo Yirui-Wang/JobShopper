@@ -18,10 +18,11 @@
 
 使用非常简单，只需要两句代码即可：
 ```python
-    js = JobShopper(n_machines=20)
+    js = JobShopper()
     pop, logbook = js.ga(npop=100, cxpb=0.2, mutpb=0.8, ngen=10, tournsize=50, mu_indpb=0.05)
+    best = js.save_best(pop)
 ```
-第一句代码得到一个JobShopper对象（需要传入机器数量的参数），第二句代码利用遗传算法寻优，ga方法各个参数的含义在注释中有做详细解释。ga方法返回最后一代的种群和整个搜索过程的日志（会打印到命令行并且作图）。需要修改交叉算法的话，可以对__crossover方法的代码进行修改。
+第一句代码得到一个JobShopper对象，第二句代码利用遗传算法寻优，ga方法各个参数的含义在注释中有做详细解释。ga方法返回最后一代的种群和整个搜索过程的日志（会打印到命令行并且作图）。需要修改交叉算法的话，可以对__crossover方法的代码进行修改。第三句代码从最后一代pop中找到最优解并将其时间数据（可用于绘制甘特图）保存在data中。
 
 比如，一次搜索过程如下：
 
@@ -32,3 +33,5 @@
 ## 数据格式
 
 在运行程序之前，将machine_matrix，time_matrix数据以csv的格式存放于data中，名命为machine.csv，time.csv。机器号、工序号、工件号都是从0开始编号否则会报错。
+
+新增了对同种机器多台数量的支持后，需要再在data中额外增加一个n_machine.csv文件，用于说明每台机器的数量。
