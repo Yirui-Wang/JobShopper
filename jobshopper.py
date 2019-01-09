@@ -4,6 +4,8 @@ from random import sample
 import numpy as np
 import matplotlib.pyplot as plt
 from deap import base, tools, creator, algorithms
+import plotly.offline as off
+import plotly.figure_factory as ff
 
 
 class JobShopper:
@@ -20,10 +22,10 @@ class JobShopper:
         seq = [r % self.__n_jobs for r in ind]
         return seq
 
-    def __evaluate(self, ind, save_time_matrix=False):
+    def __evaluate(self, ind, plot_gantt=False):
         """
         适应度的值为所有工件全部加工完成所需要的时间。
-        如果save_time_matrix为True，则将用于绘制甘特图的数据输出到data中。
+        如果plot_gantt为True，则将用于绘制的甘特图及数据输出到data中。
         """
         seq = self.__decode(ind)    # 随机序列解码后的加工顺序
         ops = [-1] * self.__n_jobs  # ops[i]代表第i个工件需要加工的工序
@@ -38,6 +40,7 @@ class JobShopper:
         # start_time[i][j]代表第i个工件，第j个工序的开始加工时间，end_time[i][j]同理
         start_time = [[-1] * self.__n_max_ops for _ in range(self.__n_jobs)]
         end_time = [[-1] * self.__n_max_ops for _ in range(self.__n_jobs)]
+        n_machine = [[-1] * self.__n_max_ops for _ in range(self.__n_jobs)] # 在多台机器的第几号机器上加工
 
         for i in seq:       # 第i个工件
             ops[i] += 1
@@ -50,6 +53,7 @@ class JobShopper:
 
             least_waiting_machine_time = min(status[machine_type])                              # 该工序将要使用机器的最近空闲时间点
             least_waiting_machine_num = status[machine_type].index(least_waiting_machine_time)  # 该工序将要使用该种机器的哪一台
+            n_machine[i][j] = least_waiting_machine_num
 
             if j == 0:      # 如果是第0道工序，则开始时间为该工序将要使用机器的最近空闲时间点
                 start_time[i][j] = least_waiting_machine_time
@@ -60,10 +64,30 @@ class JobShopper:
             end_time[i][j] = start_time[i][j] + time
             status[machine_type][least_waiting_machine_num] = end_time[i][j]
 
-        if save_time_matrix:
+        if plot_gantt:    # 绘制甘特图
+            df = []
+            for i in range(self.__n_jobs):
+                for j in range(self.__n_max_ops):
+                    machine_type = self.__machine_matrix[i][j]
+                    start = start_time[i][j]
+                    end = end_time[i][j]
+
+                    if machine_type == -1:
+                        continue
+
+                    task = 'Machine' + str(machine_type) + '-' + str(n_machine[i][j])
+                    df.append(str((dict(Task=task, Start=start, Finish=end, Resource=str(i)))))
+
+            df = sorted(df)
+            df_sorted = []
+            for s in df:
+                df_sorted.append(eval(s))
+
             timestamp = tm.strftime("%Y_%m_%d_%H_%M_%S", tm.localtime())
-            np.savetxt('data/{}_start_time.csv'.format(timestamp), start_time, fmt='%d', delimiter=',')
-            np.savetxt('data/{}_end_time.csv'.format(timestamp), end_time, fmt='%d', delimiter=',')
+            np.savetxt('data/{}_gantt.csv'.format(timestamp), df_sorted, fmt='%s', delimiter=',')
+            fig = ff.create_gantt(df_sorted, index_col='Resource', show_colorbar=True, group_tasks=True)
+            fig['layout']['xaxis'].update({'type': None})
+            off.plot(fig, filename='data/{}_gantt'.format(timestamp))
 
         max_time = 0
         for s in status:
@@ -127,11 +151,11 @@ class JobShopper:
 
         pop = toolbox.population(n=npop)
         pop, logbook = algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=ngen, stats=stats, verbose=True)
-        JobShopper.plot(logbook)
+        JobShopper.plot_log(logbook)
 
         return pop, logbook
 
-    def save_best(self, pop):
+    def get_best(self, pop):
         min_value = self.__evaluate(pop[0])
         best_ind = pop[0]
 
@@ -141,7 +165,7 @@ class JobShopper:
                 min_value = fitness
                 best_ind = ind
 
-        self.__evaluate(best_ind, save_time_matrix=True)
+        self.__evaluate(best_ind, plot_gantt=True)
         best_ind = self.__decode(best_ind)
         print('最少消耗时间{}。'.format(min_value[0]))
         print('最优解为{}。'.format(best_ind))
@@ -149,7 +173,7 @@ class JobShopper:
         return best_ind
 
     @staticmethod
-    def plot(logbook):
+    def plot_log(logbook):
         gen = logbook.select("gen")
         fit_mins = logbook.select("min")
         fit_avgs = logbook.select("avg")
@@ -178,4 +202,4 @@ class JobShopper:
 if __name__ == '__main__':
     js = JobShopper()
     pop, logbook = js.ga(npop=100, cxpb=0.2, mutpb=0.8, ngen=10, tournsize=50, mu_indpb=0.05)
-    best = js.save_best(pop)
+    best = js.get_best(pop)
