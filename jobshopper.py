@@ -49,6 +49,8 @@ class JobShopper:
             time = self.__time_matrix[i][j]
 
             if machine_type == -1 and time == 0:
+                start_time[i][j] = end_time[i][j - 1]
+                end_time[i][j] = end_time[i][j - 1]
                 continue
 
             least_waiting_machine_time = min(status[machine_type])                              # 该工序将要使用机器的最近空闲时间点
